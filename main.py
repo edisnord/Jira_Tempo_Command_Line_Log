@@ -1,4 +1,6 @@
 import _thread
+import re
+import threading
 import time
 import requests
 import json
@@ -8,9 +10,12 @@ from datetime import timedelta
 logLink = "https://api.tempo.io/core/3/worklogs"
 userID = ""
 dateTo = None
+numberOfErrors = 0
+
 
 def log(task, hrs, billableHrs, date, time, userID):
     import json
+    global numberOfErrors
     json = json.dumps({
         "issueKey": task,
         "timeSpentSeconds": hrs,
@@ -19,14 +24,6 @@ def log(task, hrs, billableHrs, date, time, userID):
         "startTime": time,
         "authorAccountId": userID,
         "attributes": [
-            {
-                "key": "_WorklogValue_",
-                "value": "60.0"
-            },
-            {
-                "key": "_RevenueRate_",
-                "value": "60.0"
-            },
             {
                 "key": "_Category_",
                 "value": "A"
@@ -38,30 +35,53 @@ def log(task, hrs, billableHrs, date, time, userID):
         ]
     })
 
-    requests.post(url=logLink,
-                  headers=data,
-                  data=json)
+    request = requests.post(url=logLink,
+                            headers=data,
+                            data=json)
 
-    print("Logged date: " + date.strftime("%Y-%m-%d"))
+    if request.status_code == 200:
+        print("Logged date: " + date.strftime("%Y-%m-%d"))
+    else:
+        numberOfErrors += 1
+        print("Error logging date " + date.strftime("%Y-%m-%d"))
+        logError(json, request)
 
 
+def logError(json, request):
+    global numberOfErrors
+    print("Logging to log.txt, please send the log to the developer of the script")
+    logtxt = open("log.txt", "a")
+    if numberOfErrors < 2:
+        logtxt.write("Error date and time: " + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + "\n")
+        logtxt.write("Error code: " + str(request.status_code))
+    else:
+        logtxt.write("\n\nError number:" + str(numberOfErrors))
+    logtxt.write("\nThe HTTP header for the request: \n")
+    logtxt.write(re.sub(r'Authorization.*Content-Type', "Authorization\': \'Bearer HIDDEN', 'Content-Type", str(data)))
+    logtxt.write("\nThe JSON data for the request \n")
+    logtxt.write(str(json))
+    logtxt.close()
 
 
-name = input("Your Jira display name and surname: \n")
-logDate = input("A day in which you've logged something on Tempo(YYYY-MM-DD): \n")
+name = input("Input your Jira display name and surname: \n")
+logDate = input(
+    "Input a day in which you've logged something on Tempo(YYYY-MM-DD)(necessary to find your user ID through the worklog): \n")
 
 with open('data.txt') as f:
     lines = f.readlines()
-    token = lines[0].replace('\n', '')
-    task = lines[1].replace('\n', '')
-    if len(lines) >= 3:
-        nonProcessedDate = lines[2].replace('\n', '')
-    if len(lines) >= 4:
-        timeR = lines[3].replace('\n', '')
-    if len(lines) >= 5:
-        hrs = str(int(float(lines[4]) * 3600))
-    if len(lines) >= 6:
-        billableHrs = str(int(float(lines[4]) * 3600))
+    configShift = 0
+    while configShift >= 0:
+        if lines[configShift][0:1] == "#" or lines[configShift][0:1] == "\n":
+            configShift += 1
+        else:
+            break
+
+    token = re.sub(r'^.*?:', '', lines[0 + configShift].replace('\n', ''))
+    task = re.sub(r'^.*?:', '', lines[1 + configShift].replace('\n', ''))
+    nonProcessedDate = re.sub(r'^.*?:', '', lines[2 + configShift].replace('\n', ''))
+    timeR = re.sub(r'^.*?:', '', lines[3 + configShift].replace('\n', ''))
+    hrs = str(int(float(re.sub(r'^.*?:', '', lines[4 + configShift]).replace("\n", '')) * 3600))
+    billableHrs = str(int(float(re.sub(r'^.*?:', '', lines[5 + configShift]).replace("\n", '')) * 3600))
 
 if nonProcessedDate.count('-') > 2:
     date = datetime.strptime(nonProcessedDate[0:10], "%Y-%m-%d")
@@ -95,7 +115,16 @@ if userID == "":
     exit(100)
 
 if dateTo is not None:
+    threads: list = []
     for a in range((dateTo - date).days + 1):
-        _thread.start_new_thread(log, (task, hrs, billableHrs, date + timedelta(days=a), timeR, userID))
+        threads.append(threading.Thread(target=log,
+                                        args=(task, hrs, billableHrs, date + timedelta(days=a), timeR, userID)))
+    for a in range(len(threads)):
+        threads[a].start()
+    for a in range(len(threads)):
+        threads[a].join()
 
-time.sleep(3)
+if numberOfErrors > 0:
+    logtxt = open("log.txt", "a")
+    logtxt.write("\n\nVery sorry for the inconvenience, the bug will be fixed soon :)\n\n")
+    logtxt.close()
