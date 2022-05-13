@@ -1,4 +1,3 @@
-import _thread
 import re
 import threading
 import time
