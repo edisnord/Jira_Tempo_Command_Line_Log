@@ -1,0 +1,13 @@
+#This is a data.txt template
+#You can write comments by writing # in the beginning of a line
+
+#empty lines are also ignored
+
+#below we write the configuration for what you want to log
+#Any text before the : in the lines is discared as well, line numbers are what is checked when it comes to what you have entered in the config file
+
+API Key:thisisanapikey
+Issue:ISS-833
+Date:2022-10-23(any character here)2022-12-30<-this other date is optional
+Hours:8
+Billable Hours:8
