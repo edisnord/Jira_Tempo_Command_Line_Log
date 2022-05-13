@@ -1,5 +1,5 @@
-import threading
-
+import _thread
+import time
 import requests
 import json
 from datetime import datetime
@@ -10,7 +10,7 @@ userID = ""
 dateTo = None
 
 def log(task, hrs, billableHrs, date, time, userID):
-    global json
+    import json
     json = json.dumps({
         "issueKey": task,
         "timeSpentSeconds": hrs,
@@ -42,6 +42,8 @@ def log(task, hrs, billableHrs, date, time, userID):
                   headers=data,
                   data=json)
 
+    print("Logged date: " + date.strftime("%Y-%m-%d"))
+
 
 
 
@@ -55,7 +57,7 @@ with open('data.txt') as f:
     if len(lines) >= 3:
         nonProcessedDate = lines[2].replace('\n', '')
     if len(lines) >= 4:
-        time = lines[3].replace('\n', '')
+        timeR = lines[3].replace('\n', '')
     if len(lines) >= 5:
         hrs = str(int(float(lines[4]) * 3600))
     if len(lines) >= 6:
@@ -93,5 +95,7 @@ if userID == "":
     exit(100)
 
 if dateTo is not None:
-    for a in range((dateTo - date).days):
-        threading.Thread.start()
+    for a in range((dateTo - date).days + 1):
+        _thread.start_new_thread(log, (task, hrs, billableHrs, date + timedelta(days=a), timeR, userID))
+
+time.sleep(3)
