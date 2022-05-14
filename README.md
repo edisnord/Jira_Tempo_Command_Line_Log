@@ -7,11 +7,19 @@ text file called data.txt in the same directory with the script in the format:
 API Key:$API_KEY <br />
 Issue:$ISSUE_CODE <br />
 Date:$DATE (Optionally another date to create a range) <br />
+Start time:$TIME <br />
 Hours:$HOURS <br />
 Billable Hours:$BILLABLE_HOURS <br />
 
+Do not change the order of the lines as that is how data is read from this file
+, the text before the : character can be changed though, but you must never remove the : character or add any space 
+between the : and the data you've added to the config, so it should be:
 
-In that specific order(do not write comments in between lines or change the order, the text before the : character can be changed though).
-You can also write comments and have spaces above the config, but don't put spaces/comments between the data lines.
+CUSTOM NAME:VALUE YOU'RE UPLOADING
+
+You can also write comments and have spaces in the config.
 The script also asks for your display name and a day when you have logged somethign in Tempo, because the 
 API does not have a feature which tells you what user created the API key, so I had to take the uglier path to fixing the issue.
+
+You can also chain multiple issues to be logged by adding 5 more lines describing the issues, again in the same order
+as the template but this time excluding your API key, as it should always only be in the first line of the configuration

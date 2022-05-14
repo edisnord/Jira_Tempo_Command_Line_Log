@@ -4,10 +4,23 @@
 #empty lines are also ignored
 
 #below we write the configuration for what you want to log
-#Any text before the : in the lines is discared as well, line numbers are what is checked when it comes to what you have entered in the config file
+#Any text before the : in the lines is discarded as well, line numbers are what is checked when it comes to what you have entered in the config file
 
+#The API key should always be the first one added, and should never repeat again in the configuration file
 API Key:thisisanapikey
+#You can also add comments between lines
+
+#spaces too
+#Issue 1
 Issue:ISS-833
-Date:2022-10-23(any character here)2022-12-30<-this other date is optional
+Date:2022-10-23 2022-10-27
+Starting Time:09-00-00
 Hours:8
 Billable Hours:8
+
+#Issue 2
+Issue:ISE-833
+Date:2022-10-10
+Time:09-00-00
+Hours:4
+Billable Hours:4
