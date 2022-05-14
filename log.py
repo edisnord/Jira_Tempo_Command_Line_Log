@@ -60,6 +60,7 @@ def logError(json, request, data):
 
 
 def readData():
+    import re
     global token
     lines = [x for x in open("data.txt").readlines() if x[0:1] != "#" and x[0:1] != "\n"]
     token = re.sub(r'^.*?:', '', lines[0].replace('\n', ''))
@@ -82,11 +83,11 @@ def startLog(name, logDate, lines, configShift):
     global token
 
     configShift = configShift * 5
-    task = re.sub(r'^.*?:', '', lines[1 + configShift].replace('\n', ''))
-    nonProcessedDate = re.sub(r'^.*?:', '', lines[2 + configShift].replace('\n', ''))
-    timeR = re.sub(r'^.*?:', '', lines[3 + configShift].replace('\n', ''))
-    hrs = str(int(float(re.sub(r'^.*?:', '', lines[4 + configShift]).replace("\n", '')) * 3600))
-    billableHrs = str(int(float(re.sub(r'^.*?:', '', lines[5 + configShift]).replace("\n", '')) * 3600))
+    task = re.sub(r'^.*?:', '', lines[0 + configShift].replace('\n', ''))
+    nonProcessedDate = re.sub(r'^.*?:', '', lines[1 + configShift].replace('\n', ''))
+    timeR = re.sub(r'^.*?:', '', lines[2 + configShift].replace('\n', ''))
+    hrs = str(int(float(re.sub(r'^.*?:', '', lines[3 + configShift]).replace("\n", '')) * 3600))
+    billableHrs = str(int(float(re.sub(r'^.*?:', '', lines[4 + configShift]).replace("\n", '')) * 3600))
 
     if nonProcessedDate.count('-') > 2:
         date = datetime.strptime(nonProcessedDate[0:10], "%Y-%m-%d")
@@ -142,5 +143,3 @@ def startLog(name, logDate, lines, configShift):
             threads[a].join()
     else:
         logtotempo(task, hrs, billableHrs, date, timeR, userID, data)
-
-
