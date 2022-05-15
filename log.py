@@ -67,7 +67,7 @@ def readData():
     lines.pop(0)
     return lines
 
-def startLog(name, logDate, lines, configShift):
+def logThruFile(name, logDate, lines, configShift):
     import re
     import json
     import threading
@@ -86,6 +86,9 @@ def startLog(name, logDate, lines, configShift):
     task = re.sub(r'^.*?:', '', lines[0 + configShift].replace('\n', ''))
     nonProcessedDate = re.sub(r'^.*?:', '', lines[1 + configShift].replace('\n', ''))
     timeR = re.sub(r'^.*?:', '', lines[2 + configShift].replace('\n', ''))
+    if re.compile("^[0-9]{2}-[0-9]{2}-[0-9]{2}$").match(timeR) is None:
+        print("Wrong time format, exiting...")
+        exit(100)
     hrs = str(int(float(re.sub(r'^.*?:', '', lines[3 + configShift]).replace("\n", '')) * 3600))
     billableHrs = str(int(float(re.sub(r'^.*?:', '', lines[4 + configShift]).replace("\n", '')) * 3600))
 
@@ -137,6 +140,97 @@ def startLog(name, logDate, lines, configShift):
         for a in range((dateTo - date).days + 1):
             threads.append(threading.Thread(target=logtotempo,
                                             args=(task, hrs, billableHrs, date + timedelta(days=a), timeR, userID, data)))
+        for a in range(len(threads)):
+            threads[a].start()
+        for a in range(len(threads)):
+            threads[a].join()
+    else:
+        logtotempo(task, hrs, billableHrs, date, timeR, userID, data)
+
+def logThruConsole(name, logDate, lines):
+    import re
+    import json
+    import threading
+    import time
+    import requests
+    from datetime import datetime
+    from datetime import timedelta
+
+    logLink = "https://api.tempo.io/core/3/worklogs"
+    userID = ""
+    dateTo = None
+    global numberOfErrors
+    global token
+
+    task = input("Insert an issue code:")
+    print("(You can also insert a date range just like in data.txt)")
+    nonProcessedDate = input("Enter a work date(leave empty for today's date)(Format YYYY-MM-DD):")
+    timeR = input("Work start time(Format HH-MM-SS):")
+    if re.compile("^[0-9]{2}-[0-9]{2}-[0-9]{2}$").match(timeR) is None:
+        print("Wrong time format, exiting...")
+        exit(100)
+    try:
+        hrs = str(int(float(input("How many hours did you work?")) * 3600))
+        billableHrs = str(int(float(input("How many of these hours were billable?")) * 3600))
+    except ValueError:
+        print("Wrong hour format, exiting")
+        exit(200)
+    if hrs > 24 * 3600 or billableHrs > 24 * 3600:
+        print("Wrong hour format, exiting")
+        exit(200)
+
+    if nonProcessedDate.count('-') > 2:
+        date = datetime.strptime(nonProcessedDate[0:10], "%Y-%m-%d")
+        dateTo = datetime.strptime(nonProcessedDate[11:22], "%Y-%m-%d")
+    elif nonProcessedDate == "":
+        date = datetime.now()
+    else:
+        date = datetime.strptime(nonProcessedDate, "%Y-%m-%d")
+
+    try:
+        dateTime = datetime.strptime(logDate, "%Y-%m-%d") + timedelta(days=1)
+    except Exception:
+        print("Inserted wrong date format in console input, exiting...")
+        exit(100)
+
+    data = {"Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+            "User-Agent": "PostmanRuntime/7.29.0",
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive"}
+
+    accIDLink = logLink + "?from=" + logDate + "&to=" + dateTime.strftime("%Y-%m-%d") + "&limit=1000"
+    try:
+        accIDReq = requests.get(url=accIDLink,
+                                headers=data
+                                )
+    except Exception:
+        print(
+            "You seem to have issues connecting to the internet, please fix any connectivity issues before running this script")
+        exit(500)
+
+    if accIDReq.status_code != 200:
+        print("Wrong API key in data.txt, check if you key is expired/wrong")
+        exit(401)
+
+    issuesJson: dict = accIDReq.json()
+    results: list = issuesJson.get("results")
+    for a in results:
+        if a.get("author").get("displayName") == name:
+            userID: str = a.get("author").get("accountId")
+            break
+
+    if userID == "":
+        print("No issue found on given date for user, exiting...")
+        exit(100)
+
+    if dateTo is not None:
+        threads: list = []
+        for a in range((dateTo - date).days + 1):
+            threads.append(threading.Thread(target=logtotempo,
+                                            args=(
+                                            task, hrs, billableHrs, date + timedelta(days=a), timeR, userID, data)))
         for a in range(len(threads)):
             threads[a].start()
         for a in range(len(threads)):

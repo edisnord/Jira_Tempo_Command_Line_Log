@@ -1,20 +1,44 @@
 import log
+import sys, getopt
 from datetime import datetime
 
-logLink = "https://api.tempo.io/core/3/worklogs"
-userID = ""
-dateTo = None
-numberOfErrors = 0
-name = input("Input your Jira display name and surname: \n")
-logDate = input(
-    "Input a day in which you've logged something on Tempo(YYYY-MM-DD)(necessary to find your user ID through the worklog): \n")
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, "hfc", ["help", "file", "console"])
+    except getopt.GetoptError:
+        print("main.py -c or -f or -h")
+        sys.exit(2)
 
-lines = log.readData()
+    for opt, arg in opts:
+        if opt in ('-h', "--help"):
+            print("main.py arguments: \n"
+                  "     -h or --help : help\n"
+                  "     -c or --console : console mode\n"
+                  "     -f or --file : file mode\n")
+            sys.exit()
 
-for configShift in range(int(len(lines) / 5)):
-    log.startLog(name, logDate, lines, configShift)
+    logLink = "https://api.tempo.io/core/3/worklogs"
+    userID = ""
+    dateTo = None
+    numberOfErrors = 0
+    name = input("Input your Jira display name and surname: \n")
+    logDate = input(
+        "Input a day in which you've logged something on Tempo(YYYY-MM-DD)(necessary to find your user ID through the worklog): \n")
 
-if log.numberOfErrors > 0:
-    logtxt = open("log" + datetime.now().strftime("%d-%m-%Y") + ".txt", "a")
-    logtxt.write("\n\nVery sorry for the inconvenience, the bug will be fixed soon :)\n\n")
-    logtxt.close()
+    lines = log.readData()
+
+    for opt, arg in opts:
+        if opt in ("-f", "--file"):
+            for configShift in range(int(len(lines) / 5)):
+                log.logThruFile(name, logDate, lines, configShift)
+
+        elif opt in ("-c", "--console"):
+                log.logThruConsole(name, logDate, lines)
+
+    if log.numberOfErrors > 0:
+        logtxt = open("log" + datetime.now().strftime("%d-%m-%Y") + ".txt", "a")
+        logtxt.write("\n\nVery sorry for the inconvenience, the bug will be fixed soon :)\n\n")
+        logtxt.close()
+
+if __name__ == "__main__":
+   main(sys.argv[1:])

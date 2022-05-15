@@ -23,3 +23,14 @@ API does not have a feature which tells you what user created the API key, so I 
 
 You can also chain multiple issues to be logged by adding 5 more lines describing the issues, again in the same order
 as the template but this time excluding your API key, as it should always only be in the first line of the configuration
+
+The program supports 2 execution modes, console mode and file mode which can be selected using a parameter when you run
+main.py. Console mode supports the upload of only a single issue log(of course ranges are supported in dates)
+Here's an example:
+```bash
+#for console mode
+python main.py -c
+#for file mode
+python main.py -f
+#either way you need to have an API key in the first line of data.txt
+````
