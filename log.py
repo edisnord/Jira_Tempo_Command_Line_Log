@@ -175,7 +175,7 @@ def logThruConsole(name, logDate, lines):
     except ValueError:
         print("Wrong hour format, exiting")
         exit(200)
-    if hrs > 24 * 3600 or billableHrs > 24 * 3600:
+    if int(hrs) > 24 * 3600 or int(billableHrs) > 24 * 3600:
         print("Wrong hour format, exiting")
         exit(200)
 

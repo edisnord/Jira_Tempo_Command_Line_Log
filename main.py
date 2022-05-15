@@ -6,7 +6,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hfc", ["help", "file", "console"])
     except getopt.GetoptError:
-        print("main.py -c or -f or -h")
+        print("main.py --help or -h for all available arguments")
         sys.exit(2)
 
     for opt, arg in opts:
@@ -16,6 +16,10 @@ def main(argv):
                   "     -c or --console : console mode\n"
                   "     -f or --file : file mode\n")
             sys.exit()
+
+    if len(opts) == 0:
+        print("main.py --help or -h for all available arguments")
+        sys.exit(0)
 
     logLink = "https://api.tempo.io/core/3/worklogs"
     userID = ""
