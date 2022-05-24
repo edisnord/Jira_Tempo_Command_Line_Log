@@ -1,18 +1,18 @@
 # Tempo command line time logging tool
 
-##Important
+## Important
 
 Before running the script, make sure you have python installed, then run the command
 
 ```bash
-pip install requests
+pip install -r requirements.txt
 ````
 
-on powershell/cmd/the linux terminal(if pip isn't recognized, check if the path of your Python installation has been added to the Windows PATH)
+at the repo directory on powershell/cmd/the linux terminal(if pip isn't recognized, check if the path of your Python installation has been added to the Windows PATH)
 
 This script is currently oriented towards my company's Tempo parameters, but you can modify them as you wish in the code
 
-##Overview
+## Overview
 
 This app's intent is to make logging time on Tempo's annoying UI easier using their API. 
 The program works by inserting your API Key(can be created from the settings inside Tempo) into a 
